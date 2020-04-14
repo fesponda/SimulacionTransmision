@@ -1,76 +1,71 @@
-breed [suceptibles suceptible]
+breed [suceptibles suceptible ]
 breed [recuperados recuperado]
 breed [infectados infectado]
-globals [ProbContagio ProbMuerte ProbRecuperado muertes lineal capacidad]
-turtles-own [SileDaSeMuere ObedeceDistanciamiento]
+turtles-own[SileDaSeMuere ObedeceDistanciamiento]
+globals [muertes]
 to setup
-  set-default-shape turtles "person"
   clear-all
-  reset-ticks
-  set capacidad 40
-  set ProbContagio 0.5
-  set ProbMuerte 0.1
-  set ProbRecuperado 0.001
+  RESET-TICKS
+  let probMuerte 0.1
   set muertes 0
-  set lineal 0
-  ;set Distanciamiento 0.0
-  ;set InicioInfectados 1
+  set-default-shape turtles "person"
+  create-suceptibles 100 [
+    set color white
+    setxy random-xcor random-ycor
+    set SileDaSeMuere False
+    if random-float 1 < probMuerte [
+      set SileDaSeMuere True
+    ]
+    set ObedeceDistanciamiento False
+    if random-float 1 < distanciamiento
+    [
+      set ObedeceDistanciamiento True
+    ]
+  ]
+  ask n-of InfectadosIniciales suceptibles[set color red set breed infectados]
 
-  create-suceptibles 100[setxy random-xcor random-ycor set color white set SileDaSeMuere letoca]
-  if InicioInfectados > count turtles
-  [ set InicioInfectados count turtles]
-  ask n-of InicioInfectados  turtles [set breed infectados setxy random-xcor random-ycor set color red set SileDaSeMuere letoca]
-  ask turtles [set ObedeceDistanciamiento Sedistancia]
 end
 
-to-report leToca
-  if random-float 1.0 < ProbMuerte
-  [report True]
-  report False
-end
 
-to-report Sedistancia
-  if random-float 1.0 < Distanciamiento
-  [report True]
-  report False
+to go
+  ask turtles [mueve]
+  ask infectados [
+    ask suceptibles in-radius 1
+    [
+      if random-float 1 < 0.2 ; sustituir por una variable global mejor
+      [ set breed infectados
+        set color red]
+    ]
+  ]
+  ask infectados[
+    if random-float 1 < 0.01 and SileDaSeMuere ; sustituir por una variable global mejor
+    [set muertes muertes + 1
+      die]
+  ]
+  ask infectados[
+    if random-float 1 < 0.005 and not SileDaSeMuere ; sustituir por una variable global mejor
+    [set breed recuperados set color green]
+  ]
+  tick
 end
 
 to mueve
   if not ObedeceDistanciamiento
   [
-    rt random-float 360
-   ; ifelse random-float 1 < 0.5
-    ;    [rt 10]
-    ;    [lt 10]
-     fd 1
-  ]
-end
-to go
-  ask turtles[
-    mueve
+    right random-float 360
+    fd 1
   ]
 
-  ask infectados[ask suceptibles in-radius 1[if random-float 1.0 < ProbContagio [set color red set breed infectados]]]
-
-  ask infectados[if (SileDaSeMuere) and (random-float 1.0 < 0.01) [set muertes muertes + 1 die ]]
-
-  ask infectados[if (not SileDaSeMuere) and (random-float 1.0 < ProbRecuperado) [set color green set breed recuperados]]
-
-  ;ask n-of turtles with [not SileDaSeMuere] [if count infectados > capacidad [if random-float 1.0 < 0.0001 [set muertes muertes + 1 die]]]
-
-  if lineal < count turtles
-  [set lineal  lineal + 0.01]
-  if count infectados > 0 [tick]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-185
-11
-713
-540
+210
+10
+647
+448
 -1
 -1
-8.0
+13.0
 1
 10
 1
@@ -80,10 +75,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--32
-32
--32
-32
+-16
+16
+-16
+16
 0
 0
 1
@@ -91,10 +86,10 @@ ticks
 30.0
 
 BUTTON
-4
-289
-90
-322
+7
+10
+73
+43
 NIL
 setup
 NIL
@@ -108,10 +103,10 @@ NIL
 1
 
 BUTTON
-110
-289
-173
-322
+88
+10
+160
+43
 NIL
 go
 T
@@ -124,96 +119,96 @@ NIL
 NIL
 1
 
+INPUTBOX
+9
+60
+99
+120
+InfectadosIniciales
+2.0
+1
+0
+Number
+
 MONITOR
-3
-216
-74
-261
+9
+162
+87
+207
 Infectados
 count infectados
 17
 1
 11
 
+MONITOR
+98
+160
+192
+205
+Suceptibles
+count suceptibles
+17
+1
+11
+
 PLOT
-730
-12
-1224
-412
-Infectados Recuperados
-Tiempo
-Actuales
+663
+28
+1082
+274
+Dinámica
+tiempo
+NIL
 0.0
-6000.0
+1000.0
 0.0
-110.0
+100.0
 false
 true
-"set-plot-pen-color black" ""
+"" ""
 PENS
-"lineal" 1.0 0 -16777216 true "" "plot lineal"
-"capacidad" 1.0 0 -955883 true "" "plot capacidad"
-"infectados" 1.0 0 -2674135 true "" "plot count infectados"
-"acumulado" 1.0 0 -14070903 true "" "plot count recuperados + count infectados + muertes"
+"Infectados Total" 1.0 0 -16777216 true "" "plot count infectados + muertes + count recuperados"
+"Lineal" 1.0 0 -7500403 true "" "plot 0.2 * ticks"
+"Infectados ahora" 1.0 0 -2674135 true "" "plot count infectados"
+"Capacidad Hospital" 1.0 0 -955883 true "" "plot 50"
 
 MONITOR
-4
-160
-67
-205
-NIL
+9
+215
+72
+260
 Muertes
+muertes
 17
 1
 11
 
 MONITOR
-72
-160
-157
-205
+98
+215
+192
+260
 Recuperados
 count recuperados
 17
 1
 11
 
-INPUTBOX
-5
-34
-105
-94
-InicioInfectados
-2.0
-1
-0
-Number
-
 SLIDER
-4
-112
-176
-145
+9
+122
+181
+155
 Distanciamiento
 Distanciamiento
 0
 1
-0.7
+0.3
 0.1
 1
 NIL
 HORIZONTAL
-
-MONITOR
-82
-216
-157
-261
-Suceptibles
-count suceptibles
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?
